@@ -14,79 +14,103 @@ from dbchecker.comparator import DatabaseComparator
 from dbchecker.models import ComparisonOptions
 
 
-def create_sample_database(db_path: str, include_differences: bool = False):
+def create_sample_database(db_path: str, include_differences: bool = False, include_timestamp_differences: bool = False):
     """Create a sample SQLite database for testing"""
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
     
-    # Create users table
+    # Create users table with various timestamp column types
     cursor.execute("""
         CREATE TABLE users (
             id TEXT PRIMARY KEY,
             username TEXT NOT NULL UNIQUE,
             email TEXT NOT NULL,
-            created_at TEXT NOT NULL,
+            created_at DATETIME NOT NULL,
+            updated_timestamp TIMESTAMP,
+            last_login_time TIME,
             is_active INTEGER DEFAULT 1
         )
     """)
     
-    # Create posts table
+    # Create posts table with timestamp naming patterns
     cursor.execute("""
         CREATE TABLE posts (
             id TEXT PRIMARY KEY,
             user_id TEXT NOT NULL,
             title TEXT NOT NULL,
             content TEXT,
-            created_at TEXT NOT NULL,
+            created TEXT NOT NULL,
+            modified TEXT,
+            published_at TEXT,
             FOREIGN KEY (user_id) REFERENCES users (id)
         )
     """)
     
+    # Base timestamps for consistency
+    base_created = '2024-01-01 10:00:00'
+    base_updated = '2024-01-01 10:30:00'
+    base_login = '10:00:00'
+    
+    # If including timestamp differences, offset them by 2 hours
+    if include_timestamp_differences:
+        base_created = '2024-01-01 12:00:00'
+        base_updated = '2024-01-01 12:30:00'  
+        base_login = '12:00:00'
+    
     # Insert sample data
     base_data = [
-        ('user1', 'john_doe', 'john@example.com', '2024-01-01 10:00:00', 1),
-        ('user2', 'jane_smith', 'jane@example.com', '2024-01-02 11:00:00', 1),
-        ('user3', 'bob_wilson', 'bob@example.com', '2024-01-03 12:00:00', 0),
+        ('user1', 'john_doe', 'john@example.com', base_created, base_updated, base_login, 1),
+        ('user2', 'jane_smith', 'jane@example.com', '2024-01-02 11:00:00', '2024-01-02 11:30:00', '11:00:00', 1),
+        ('user3', 'bob_wilson', 'bob@example.com', '2024-01-03 12:00:00', '2024-01-03 12:30:00', '12:00:00', 0),
     ]
     
-    for i, (user_id, username, email, created_at, is_active) in enumerate(base_data):
+    for i, (user_id, username, email, created_at, updated_timestamp, login_time, is_active) in enumerate(base_data):
         # Use different UUIDs but same other data
         if include_differences and i == 0:
             # Add differences in the first user
             cursor.execute("""
-                INSERT INTO users (id, username, email, created_at, is_active)
-                VALUES (?, ?, ?, ?, ?)
-            """, (f"uuid-{user_id}-different", username, "john.doe@example.com", created_at, 0))  # Changed email and is_active
+                INSERT INTO users (id, username, email, created_at, updated_timestamp, last_login_time, is_active)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            """, (f"uuid-{user_id}-different", username, "john.doe@example.com", created_at, updated_timestamp, login_time, 0))  # Changed email and is_active
         elif include_differences and i == 1:
             # Add difference in second user
             cursor.execute("""
-                INSERT INTO users (id, username, email, created_at, is_active)
-                VALUES (?, ?, ?, ?, ?)
-            """, (f"uuid-{user_id}", "jane_doe", email, created_at, is_active))  # Changed username
+                INSERT INTO users (id, username, email, created_at, updated_timestamp, last_login_time, is_active)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            """, (f"uuid-{user_id}", "jane_doe", email, created_at, updated_timestamp, login_time, is_active))  # Changed username
         else:
             cursor.execute("""
-                INSERT INTO users (id, username, email, created_at, is_active)
-                VALUES (?, ?, ?, ?, ?)
-            """, (f"uuid-{user_id}", username, email, created_at, is_active))
+                INSERT INTO users (id, username, email, created_at, updated_timestamp, last_login_time, is_active)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            """, (f"uuid-{user_id}", username, email, created_at, updated_timestamp, login_time, is_active))
     
-    # Insert posts
+    # Insert posts with timestamp differences if requested
+    post_created = '2024-01-01 15:00:00'
+    post_modified = '2024-01-01 15:30:00'
+    post_published = '2024-01-01 16:00:00'
+    
+    if include_timestamp_differences:
+        post_created = '2024-01-01 17:00:00'
+        post_modified = '2024-01-01 17:30:00'
+        post_published = '2024-01-01 18:00:00'
+    
     posts_data = [
-        ('post1', 'user1', 'First Post', 'This is the first post content', '2024-01-01 15:00:00'),
-        ('post2', 'user2', 'Second Post', 'This is the second post content', '2024-01-02 16:00:00'),
+        ('post1', 'user1', 'First Post', 'This is the first post content', post_created, post_modified, post_published),
+        ('post2', 'user2', 'Second Post', 'This is the second post content', '2024-01-02 16:00:00', '2024-01-02 16:30:00', '2024-01-02 17:00:00'),
     ]
     
-    for post_id, user_id, title, content, created_at in posts_data:
+    for post_id, user_id, title, content, created, modified, published in posts_data:
         if include_differences and post_id == 'post1':
             # Add different content and title for first post
             cursor.execute("""
-                INSERT INTO posts (id, user_id, title, content, created_at)
-                VALUES (?, ?, ?, ?, ?)
-            """, (f"uuid-{post_id}", f"uuid-{user_id}", "Modified First Post", "This content has been completely changed!", created_at))
+                INSERT INTO posts (id, user_id, title, content, created, modified, published_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            """, (f"uuid-{post_id}", f"uuid-{user_id}", "Modified First Post", "This content has been completely changed!", created, modified, published))
         else:
             cursor.execute("""
-                INSERT INTO posts (id, user_id, title, content, created_at)
-                VALUES (?, ?, ?, ?, ?)
-            """, (f"uuid-{post_id}", f"uuid-{user_id}", title, content, created_at))
+                INSERT INTO posts (id, user_id, title, content, created, modified, published_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            """, (f"uuid-{post_id}", f"uuid-{user_id}", title, content, created, modified, published))
     
     conn.commit()
     conn.close()
@@ -283,9 +307,74 @@ def demo_different_databases():
         print()
 
 
+def demo_timestamp_exclusion():
+    """Demo showing timestamp column exclusion functionality"""
+    print("=== Demo 3: Timestamp Column Exclusion ===")
+    print("This demo shows how timestamp columns are automatically excluded from comparison.")
+    print("We'll create two identical databases where only timestamps differ.")
+    
+    with tempfile.TemporaryDirectory() as temp_dir:
+        db1_path = os.path.join(temp_dir, "production.db")
+        db2_path = os.path.join(temp_dir, "staging.db")
+        
+        # Create databases with identical data but different timestamps
+        print("\nCreating production database...")
+        create_sample_database(db1_path, include_differences=False, include_timestamp_differences=False)
+        
+        print("Creating staging database (with 2-hour timestamp differences)...")
+        create_sample_database(db2_path, include_differences=False, include_timestamp_differences=True)
+        
+        # Compare databases
+        print("\nComparing databases...")
+        comparator = DatabaseComparator(
+            db1_path=db1_path,
+            db2_path=db2_path,
+            uuid_columns=['id', 'user_id']
+        )
+        
+        options = ComparisonOptions(
+            auto_detect_uuids=True,
+            verbose=True,
+            output_format=['json'],
+            parallel_tables=False
+        )
+        comparator.set_comparison_options(options)
+        
+        result = comparator.compare()
+        
+        print(f"Comparison completed at: {result.timestamp}")
+        
+        # Display schema results
+        display_schema_differences(result)
+        
+        # Display data differences (should be none due to timestamp exclusion)
+        display_differences(result)
+        
+        # Show detailed analysis
+        print(f"\n" + "="*60)
+        print("TIMESTAMP EXCLUSION ANALYSIS")
+        print("="*60)
+        print(f"Tables compared: {result.summary.total_tables}")
+        print(f"Identical tables: {result.summary.identical_tables}")
+        print(f"Tables with differences: {result.summary.tables_with_differences}")
+        print(f"Total differences found: {result.summary.total_differences_found}")
+        
+        if result.summary.total_differences_found == 0:
+            print("\n✅ SUCCESS: Timestamp differences were automatically ignored!")
+            print("   The databases are considered identical despite having different timestamps.")
+            print("   This demonstrates the tool's ability to compare production vs staging")
+            print("   environments where only deployment times differ.")
+        else:
+            print(f"\n⚠️  Found {result.summary.total_differences_found} differences")
+            print("   (This might indicate non-timestamp differences or an issue)")
+        
+        print(f"\nSUMMARY: {result.summary.identical_tables} identical tables, {result.summary.tables_with_differences} with differences")
+        print()
+
+
 def demo_report_generation():
     """Demo generating reports in different formats"""
-    print("=== Demo 3: Report Generation ===")
+    print("=== Demo 4: Report Generation ===")
     
     with tempfile.TemporaryDirectory() as temp_dir:
         db1_path = os.path.join(temp_dir, "database1.db")
@@ -325,7 +414,7 @@ def demo_report_generation():
 
 def demo_detailed_comparison():
     """Demo showing very detailed comparison output"""
-    print("=== Demo 4: Detailed Comparison Analysis ===")
+    print("=== Demo 5: Detailed Comparison Analysis ===")
     
     with tempfile.TemporaryDirectory() as temp_dir:
         db1_path = os.path.join(temp_dir, "database1.db")
@@ -384,6 +473,7 @@ def main():
     try:
         demo_identical_databases()
         demo_different_databases()
+        demo_timestamp_exclusion()
         demo_report_generation()
         demo_detailed_comparison()
         

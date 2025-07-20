@@ -1,9 +1,10 @@
 """
-Data comparator module for comparing database contents while handling UUIDs.
+Data comparator module for comparing database contents while handling UUIDs and timestamps.
 """
 
 import hashlib
 import json
+import re
 from typing import Dict, List, Any, Tuple, Set
 from .models import TableDataComparison, RowDifference, FieldDifference, DataComparisonResult
 from .uuid_handler import UUIDHandler
@@ -12,11 +13,58 @@ from .exceptions import DataComparisonError
 
 
 class DataComparator:
-    """Compares actual data between databases while handling UUID exclusions"""
+    """Compares actual data between databases while handling UUID and timestamp exclusions"""
     
     def __init__(self, uuid_handler: UUIDHandler):
         """Initialize data comparator with UUID handler"""
         self.uuid_handler = uuid_handler
+    
+    def _detect_timestamp_columns(self, table_structure) -> List[str]:
+        """Detect timestamp columns by name patterns and data types"""
+        timestamp_columns = []
+        
+        # Common timestamp column name patterns
+        timestamp_name_patterns = [
+            r'.*timestamp.*',
+            r'.*created.*',
+            r'.*updated.*',
+            r'.*modified.*',
+            r'.*deleted.*',
+            r'.*_at$',
+            r'.*_time$',
+            r'.*_date$'
+        ]
+        
+        # Common timestamp data types
+        timestamp_data_types = {
+            'DATETIME', 'TIMESTAMP', 'DATE', 'TIME',
+            'datetime', 'timestamp', 'date', 'time'
+        }
+        
+        for column in table_structure.columns:
+            # Check by data type first
+            if column.type.upper() in timestamp_data_types:
+                timestamp_columns.append(column.name)
+                continue
+            
+            # Check by column name patterns
+            for pattern in timestamp_name_patterns:
+                if re.match(pattern, column.name.lower()):
+                    timestamp_columns.append(column.name)
+                    break
+        
+        return timestamp_columns
+    
+    def get_excluded_columns_info(self, table_structure) -> Dict[str, List[str]]:
+        """Get information about which columns are excluded from comparison"""
+        uuid_columns = self.uuid_handler.detect_uuid_columns(table_structure, None)
+        timestamp_columns = self._detect_timestamp_columns(table_structure)
+        
+        return {
+            'uuid_columns': uuid_columns,
+            'timestamp_columns': timestamp_columns,
+            'all_excluded': list(set(uuid_columns + timestamp_columns))
+        }
     
     def compare_all_tables(self, conn1: DatabaseConnector, conn2: DatabaseConnector, 
                           table_names: List[str], batch_size: int = 1000) -> DataComparisonResult:
@@ -46,12 +94,18 @@ class DataComparator:
     def compare_table_data(self, table_name: str, conn1: DatabaseConnector, 
                           conn2: DatabaseConnector, batch_size: int = 1000) -> TableDataComparison:
         """Compare data in a specific table between two databases"""
-        # Get table structure to detect UUID columns
+        # Get table structure to detect UUID and timestamp columns
         table_structure1 = conn1.get_table_structure(table_name)
         
         # Get sample data for UUID detection
         sample_data1 = conn1.get_table_data(table_name, limit=100)
         uuid_columns = self.uuid_handler.detect_uuid_columns(table_structure1, sample_data1)
+        
+        # Detect timestamp columns
+        timestamp_columns = self._detect_timestamp_columns(table_structure1)
+        
+        # Combine columns to exclude from comparison
+        exclude_columns = list(set(uuid_columns + timestamp_columns))
         
         # Get all data from both tables
         data1 = conn1.get_table_data(table_name)
@@ -60,16 +114,16 @@ class DataComparator:
         row_count_db1 = len(data1)
         row_count_db2 = len(data2)
         
-        # Find matching rows and differences
-        matching_result = self.find_matching_rows(data1, data2, uuid_columns)
+        # Find matching rows and differences (excluding UUID and timestamp columns)
+        matching_result = self.find_matching_rows(data1, data2, exclude_columns)
         
         # Compare matched rows for differences
         rows_with_differences = []
         for row1, row2 in matching_result['matched_pairs']:
-            differences = self.identify_differences(row1, row2, uuid_columns)
+            differences = self.identify_differences(row1, row2, exclude_columns)
             if differences:
                 # Create a unique identifier for the row
-                row_id = self._create_row_identifier(row1, uuid_columns)
+                row_id = self._create_row_identifier(row1, exclude_columns)
                 row_diff = RowDifference(
                     row_identifier=row_id,
                     differences=differences
@@ -89,15 +143,15 @@ class DataComparator:
         )
     
     def find_matching_rows(self, rows1: List[Dict[str, Any]], rows2: List[Dict[str, Any]], 
-                          uuid_columns: List[str]) -> Dict[str, Any]:
-        """Find matching rows between two datasets, excluding UUID columns"""
+                          exclude_columns: List[str]) -> Dict[str, Any]:
+        """Find matching rows between two datasets, excluding specified columns"""
         # Create hash maps for efficient lookup
         hash_map1 = {}
         hash_map2 = {}
         
         # Hash rows from first database
         for row in rows1:
-            row_hash = self.get_row_hash(row, uuid_columns)
+            row_hash = self.get_row_hash(row, exclude_columns)
             if row_hash in hash_map1:
                 # Handle duplicate rows by storing as list
                 if not isinstance(hash_map1[row_hash], list):
@@ -108,7 +162,7 @@ class DataComparator:
         
         # Hash rows from second database
         for row in rows2:
-            row_hash = self.get_row_hash(row, uuid_columns)
+            row_hash = self.get_row_hash(row, exclude_columns)
             if row_hash in hash_map2:
                 # Handle duplicate rows by storing as list
                 if not isinstance(hash_map2[row_hash], list):
@@ -175,16 +229,16 @@ class DataComparator:
         return hashlib.md5(row_string.encode('utf-8')).hexdigest()
     
     def identify_differences(self, row1: Dict[str, Any], row2: Dict[str, Any], 
-                           uuid_columns: List[str]) -> List[FieldDifference]:
-        """Identify differences between two rows, excluding UUID columns"""
+                           exclude_columns: List[str]) -> List[FieldDifference]:
+        """Identify differences between two rows, excluding specified columns"""
         differences = []
         
         # Get all column names from both rows
         all_columns = set(row1.keys()) | set(row2.keys())
         
         for column in all_columns:
-            # Skip UUID columns
-            if column in uuid_columns:
+            # Skip excluded columns (UUIDs, timestamps, etc.)
+            if column in exclude_columns:
                 continue
             
             value1 = row1.get(column)
@@ -219,18 +273,18 @@ class DataComparator:
         # Default comparison
         return value1 == value2
     
-    def _create_row_identifier(self, row: Dict[str, Any], uuid_columns: List[str]) -> str:
-        """Create a unique identifier for a row based on non-UUID columns"""
-        # Use non-UUID columns to create identifier
+    def _create_row_identifier(self, row: Dict[str, Any], exclude_columns: List[str]) -> str:
+        """Create a unique identifier for a row based on non-excluded columns"""
+        # Use non-excluded columns to create identifier
         identifier_parts = []
         for key, value in sorted(row.items()):
-            if key not in uuid_columns:
+            if key not in exclude_columns:
                 identifier_parts.append(f"{key}={value}")
         
         if identifier_parts:
             return "|".join(identifier_parts[:3])  # Use first 3 fields for identifier
         else:
-            # Fallback to row index if no non-UUID columns
+            # Fallback to row index if no non-excluded columns
             return f"row_{hash(str(row)) % 10000}"
     
     def get_statistics(self, comparison_result: DataComparisonResult) -> Dict[str, Any]:

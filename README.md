@@ -5,8 +5,9 @@ A Python application that compares two SQLite databases for structural and data 
 ## Features
 
 - **Schema Comparison**: Compare table structures, columns, constraints, indexes, triggers, and views
-- **Data Comparison**: Compare actual data while handling UUID exclusions
+- **Data Comparison**: Compare actual data while handling UUID and timestamp exclusions
 - **UUID Detection**: Automatic detection of UUID columns plus support for explicit column specification
+- **Timestamp Detection**: Automatic detection and exclusion of timestamp columns (DATETIME, TIMESTAMP, DATE, TIME, and common naming patterns)
 - **Multiple Output Formats**: JSON, HTML, Markdown, and CSV reports
 - **Performance Optimized**: Configurable batch processing and parallel table comparison
 - **Flexible Configuration**: Extensive options for customizing comparison behavior
@@ -82,18 +83,26 @@ The tool follows a modular architecture with the following core components:
 - **DatabaseComparator**: Main controller orchestrating the comparison process
 - **DatabaseConnector**: SQLite database abstraction layer
 - **SchemaComparator**: Handles database structure comparison
-- **DataComparator**: Manages data comparison with UUID handling
+- **DataComparator**: Manages data comparison with UUID and timestamp handling
 - **UUIDHandler**: Detects and manages UUID column exclusions
 - **ReportGenerator**: Creates reports in multiple formats
 
-## UUID Handling
+## UUID and Timestamp Handling
 
-The tool intelligently handles UUIDs in several ways:
+The tool intelligently handles UUIDs and timestamps that should be excluded from comparison:
 
+### UUID Exclusions
 1. **Explicit UUID Columns**: Specify columns by name using `--uuid-columns`
 2. **Automatic Detection**: Detects common UUID patterns and column names
 3. **Custom Patterns**: Add custom regex patterns for UUID detection
 4. **Column Name Patterns**: Recognizes columns like `id`, `*_id`, `*uuid*`, `*guid*`
+
+### Timestamp Exclusions
+1. **Data Type Detection**: Automatically detects DATETIME, TIMESTAMP, DATE, and TIME columns
+2. **Column Name Patterns**: Recognizes common timestamp column names:
+   - `*timestamp*`, `*created*`, `*updated*`, `*modified*`, `*deleted*`
+   - `*_at`, `*_time`, `*_date`
+3. **Automatic Exclusion**: Timestamp columns are automatically excluded from data comparison since they often differ between database environments
 
 ## Configuration Options
 
