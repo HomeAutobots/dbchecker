@@ -1,39 +1,114 @@
 {
-  "timestamp": "2025-07-20T08:50:32.250033",
+  "timestamp": "2025-07-20T09:29:22.243102",
   "summary": {
     "total_tables": 2,
     "identical_tables": 0,
     "tables_with_differences": 2,
     "total_rows_compared": 10,
-    "total_differences_found": 4
+    "total_differences_found": 6
   },
   "schema_comparison": {
-    "identical": true,
-    "missing_in_db1": [],
-    "missing_in_db2": [],
-    "table_differences": {}
+    "schema_identical": true,
+    "tables_missing_in_db1": 0,
+    "tables_missing_in_db2": 0,
+    "tables_with_differences": 0,
+    "details": {
+      "missing_in_db1": [],
+      "missing_in_db2": [],
+      "table_differences": []
+    }
   },
   "data_comparison": {
-    "total_differences": 4,
-    "table_results": {
-      "users": {
+    "tables_compared": 2,
+    "table_details": [
+      {
+        "table_name": "users",
         "row_count_db1": 3,
         "row_count_db2": 3,
-        "matching_rows": 2,
-        "rows_only_in_db1_count": 1,
-        "rows_only_in_db2_count": 1,
-        "rows_with_differences_count": 0,
-        "sample_differences": []
+        "matching_rows": 1,
+        "rows_only_in_db1": 2,
+        "rows_only_in_db2": 2,
+        "rows_with_differences": 0,
+        "differences": [],
+        "rows_only_in_db1_details": [
+          {
+            "row_identifier": "unknown",
+            "data": {
+              "id": "uuid-user1",
+              "username": "john_doe",
+              "email": "john@example.com",
+              "created_at": "2024-01-01 10:00:00",
+              "is_active": 1
+            }
+          },
+          {
+            "row_identifier": "unknown",
+            "data": {
+              "id": "uuid-user2",
+              "username": "jane_smith",
+              "email": "jane@example.com",
+              "created_at": "2024-01-02 11:00:00",
+              "is_active": 1
+            }
+          }
+        ],
+        "rows_only_in_db2_details": [
+          {
+            "row_identifier": "unknown",
+            "data": {
+              "id": "uuid-user1-different",
+              "username": "john_doe",
+              "email": "john.doe@example.com",
+              "created_at": "2024-01-01 10:00:00",
+              "is_active": 0
+            }
+          },
+          {
+            "row_identifier": "unknown",
+            "data": {
+              "id": "uuid-user2",
+              "username": "jane_doe",
+              "email": "jane@example.com",
+              "created_at": "2024-01-02 11:00:00",
+              "is_active": 1
+            }
+          }
+        ]
       },
-      "posts": {
+      {
+        "table_name": "posts",
         "row_count_db1": 2,
         "row_count_db2": 2,
         "matching_rows": 1,
-        "rows_only_in_db1_count": 1,
-        "rows_only_in_db2_count": 1,
-        "rows_with_differences_count": 0,
-        "sample_differences": []
+        "rows_only_in_db1": 1,
+        "rows_only_in_db2": 1,
+        "rows_with_differences": 0,
+        "differences": [],
+        "rows_only_in_db1_details": [
+          {
+            "row_identifier": "unknown",
+            "data": {
+              "id": "uuid-post1",
+              "user_id": "uuid-user1",
+              "title": "First Post",
+              "content": "This is the first post content",
+              "created_at": "2024-01-01 15:00:00"
+            }
+          }
+        ],
+        "rows_only_in_db2_details": [
+          {
+            "row_identifier": "unknown",
+            "data": {
+              "id": "uuid-post1",
+              "user_id": "uuid-user1",
+              "title": "Modified First Post",
+              "content": "This content has been completely changed!",
+              "created_at": "2024-01-01 15:00:00"
+            }
+          }
+        ]
       }
-    }
+    ]
   }
 }

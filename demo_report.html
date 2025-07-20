@@ -4,67 +4,62 @@
 <head>
     <title>Database Comparison Report</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        .header { background-color: #f4f4f4; padding: 20px; border-radius: 5px; }
-        .summary { margin: 20px 0; }
-        .section { margin: 20px 0; }
-        .table { border-collapse: collapse; width: 100%; }
-        .table th, .table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        .table th { background-color: #f2f2f2; }
-        .identical { color: green; }
-        .different { color: red; }
-        .warning { color: orange; }
+        body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
+        .summary { background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+        .difference { background-color: #fff3cd; padding: 15px; margin: 15px 0; border-left: 4px solid #ffc107; border-radius: 4px; }
+        .identical { background-color: #d4edda; padding: 15px; margin: 15px 0; border-left: 4px solid #28a745; border-radius: 4px; }
+        .table-section { margin: 20px 0; }
+        table { border-collapse: collapse; width: 100%; margin: 10px 0; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background-color: #f2f2f2; font-weight: bold; }
+        .field-name { font-weight: bold; color: #495057; }
+        .value-diff { background-color: #ffebee; }
+        .metric { display: inline-block; margin: 10px 15px 10px 0; }
+        .metric-value { font-weight: bold; color: #0056b3; }
+        h2 { color: #343a40; border-bottom: 2px solid #dee2e6; padding-bottom: 10px; }
+        h3 { color: #495057; }
+        h4 { color: #6c757d; }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>Database Comparison Report</h1>
-        <p><strong>Generated:</strong> 2025-07-20 08:50:32</p>
-    </div>
+    <h1>🔍 Database Comparison Report</h1>
     
     <div class="summary">
-        <h2>Summary</h2>
-        <ul>
-            <li><strong>Total Tables:</strong> 2</li>
-            <li><strong>Identical Tables:</strong> <span class="identical">0</span></li>
-            <li><strong>Tables with Differences:</strong> <span class="different">2</span></li>
-            <li><strong>Total Rows Compared:</strong> 10</li>
-            <li><strong>Total Differences Found:</strong> <span class="different">4</span></li>
-        </ul>
+        <h2>📊 Summary</h2>
+        <p><strong>Generated:</strong> 2025-07-20T09:30:12.286563</p>
+        <div class="metric">
+            <span>Total Tables:</span> 
+            <span class="metric-value">2</span>
+        </div>
+        <div class="metric">
+            <span>Identical Tables:</span> 
+            <span class="metric-value">0</span>
+        </div>
+        <div class="metric">
+            <span>Tables with Differences:</span> 
+            <span class="metric-value">2</span>
+        </div>
+        <div class="metric">
+            <span>Total Rows Compared:</span> 
+            <span class="metric-value">10</span>
+        </div>
+        <div class="metric">
+            <span>Total Differences Found:</span> 
+            <span class="metric-value">6</span>
+        </div>
     </div>
-    
-    <div class="section">
-        <h2>Schema Comparison</h2>
-        <p><strong>Schema Identical:</strong> <span class="identical">True</span></p>
-        
-        
-        <p>No schema differences found.</p>
-    </div>
-    
-    <div class="section">
-        <h2>Data Comparison</h2>
-        
-        <h3>users</h3>
-        <ul>
-            <li>Rows in DB1: 3</li>
-            <li>Rows in DB2: 3</li>
-            <li>Matching rows: 2</li>
-            <li>Rows only in DB1: 1</li>
-            <li>Rows only in DB2: 1</li>
-            <li>Rows with differences: 0</li>
-        </ul>
-
-        <h3>posts</h3>
-        <ul>
-            <li>Rows in DB1: 2</li>
-            <li>Rows in DB2: 2</li>
-            <li>Matching rows: 1</li>
-            <li>Rows only in DB1: 1</li>
-            <li>Rows only in DB2: 1</li>
-            <li>Rows with differences: 0</li>
-        </ul>
-
-    </div>
-    
-</body>
-</html>
+<h2>📊 Data Differences</h2><div class="table-section"><h3>Table: users</h3>
+                        <div class="metric">Row Count DB1: <span class="metric-value">3</span></div>
+                        <div class="metric">Row Count DB2: <span class="metric-value">3</span></div>
+                        <div class="metric">Matching Rows: <span class="metric-value">1</span></div>
+                        <div class="metric">Rows Only in DB1: <span class="metric-value">2</span></div>
+                        <div class="metric">Rows Only in DB2: <span class="metric-value">2</span></div>
+                        <div class="metric">Rows with Differences: <span class="metric-value">0</span></div>
+                        <h4>Rows Only in Database 1</h4><div class="difference"><h5>Row #1</h5><table><tr><th>Field</th><th>Value</th></tr><tr><td class='field-name'>id</td><td>uuid-user1</td></tr><tr><td class='field-name'>username</td><td>john_doe</td></tr><tr><td class='field-name'>email</td><td>john@example.com</td></tr><tr><td class='field-name'>created_at</td><td>2024-01-01 10:00:00</td></tr><tr><td class='field-name'>is_active</td><td>1</td></tr></table></div><div class="difference"><h5>Row #2</h5><table><tr><th>Field</th><th>Value</th></tr><tr><td class='field-name'>id</td><td>uuid-user2</td></tr><tr><td class='field-name'>username</td><td>jane_smith</td></tr><tr><td class='field-name'>email</td><td>jane@example.com</td></tr><tr><td class='field-name'>created_at</td><td>2024-01-02 11:00:00</td></tr><tr><td class='field-name'>is_active</td><td>1</td></tr></table></div><h4>Rows Only in Database 2</h4><div class="difference"><h5>Row #1</h5><table><tr><th>Field</th><th>Value</th></tr><tr><td class='field-name'>id</td><td>uuid-user1-different</td></tr><tr><td class='field-name'>username</td><td>john_doe</td></tr><tr><td class='field-name'>email</td><td>john.doe@example.com</td></tr><tr><td class='field-name'>created_at</td><td>2024-01-01 10:00:00</td></tr><tr><td class='field-name'>is_active</td><td>0</td></tr></table></div><div class="difference"><h5>Row #2</h5><table><tr><th>Field</th><th>Value</th></tr><tr><td class='field-name'>id</td><td>uuid-user2</td></tr><tr><td class='field-name'>username</td><td>jane_doe</td></tr><tr><td class='field-name'>email</td><td>jane@example.com</td></tr><tr><td class='field-name'>created_at</td><td>2024-01-02 11:00:00</td></tr><tr><td class='field-name'>is_active</td><td>1</td></tr></table></div></div><div class="table-section"><h3>Table: posts</h3>
+                        <div class="metric">Row Count DB1: <span class="metric-value">2</span></div>
+                        <div class="metric">Row Count DB2: <span class="metric-value">2</span></div>
+                        <div class="metric">Matching Rows: <span class="metric-value">1</span></div>
+                        <div class="metric">Rows Only in DB1: <span class="metric-value">1</span></div>
+                        <div class="metric">Rows Only in DB2: <span class="metric-value">1</span></div>
+                        <div class="metric">Rows with Differences: <span class="metric-value">0</span></div>
+                        <h4>Rows Only in Database 1</h4><div class="difference"><h5>Row #1</h5><table><tr><th>Field</th><th>Value</th></tr><tr><td class='field-name'>id</td><td>uuid-post1</td></tr><tr><td class='field-name'>user_id</td><td>uuid-user1</td></tr><tr><td class='field-name'>title</td><td>First Post</td></tr><tr><td class='field-name'>content</td><td>This is the first post content</td></tr><tr><td class='field-name'>created_at</td><td>2024-01-01 15:00:00</td></tr></table></div><h4>Rows Only in Database 2</h4><div class="difference"><h5>Row #1</h5><table><tr><th>Field</th><th>Value</th></tr><tr><td class='field-name'>id</td><td>uuid-post1</td></tr><tr><td class='field-name'>user_id</td><td>uuid-user1</td></tr><tr><td class='field-name'>title</td><td>Modified First Post</td></tr><tr><td class='field-name'>content</td><td>This content has been completely changed!</td></tr><tr><td class='field-name'>created_at</td><td>2024-01-01 15:00:00</td></tr></table></div></div></body></html>

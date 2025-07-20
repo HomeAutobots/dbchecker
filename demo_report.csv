@@ -1,5 +1,7 @@
-Table,Type,Row_Identifier,Field,Value_DB1,Value_DB2
-users,MISSING_IN_DB2,uuid-user1,,PRESENT,MISSING
-users,MISSING_IN_DB1,uuid-user1-different,,MISSING,PRESENT
-posts,MISSING_IN_DB2,uuid-post1,,PRESENT,MISSING
-posts,MISSING_IN_DB1,uuid-post1,,MISSING,PRESENT
+Type,Table,Row_Identifier,Field_Name,Database1_Value,Database2_Value
+Row Only in DB1,users,Row_1,,,
+Row Only in DB1,users,Row_2,,,
+Row Only in DB2,users,Row_1,,,
+Row Only in DB2,users,Row_2,,,
+Row Only in DB1,posts,Row_1,,,
+Row Only in DB2,posts,Row_1,,,
