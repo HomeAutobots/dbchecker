@@ -125,6 +125,19 @@ class TableComparisonResult:
 
 
 @dataclass
+class UUIDStatistics:
+    """Statistics about UUID columns and values in comparison"""
+    uuid_columns: List[str]
+    total_uuid_values_db1: int
+    total_uuid_values_db2: int
+    unique_uuid_values_db1: int
+    unique_uuid_values_db2: int
+    uuid_value_differences: int  # Number of UUID mismatches (expected for different databases)
+    detected_patterns: Dict[str, str] = field(default_factory=dict)  # column -> detected pattern
+    normalized_match_count: int = 0  # Number of records that match after pattern normalization
+
+
+@dataclass
 class TableDataComparison:
     """Represents the result of comparing data in two tables"""
     table_name: str
@@ -134,6 +147,7 @@ class TableDataComparison:
     rows_only_in_db1: List[Dict]
     rows_only_in_db2: List[Dict]
     rows_with_differences: List[RowDifference]
+    uuid_statistics: Optional[UUIDStatistics] = None
 
 
 @dataclass
@@ -160,6 +174,10 @@ class ComparisonSummary:
     tables_with_differences: int
     total_rows_compared: int
     total_differences_found: int
+    total_uuid_columns: int = 0
+    total_uuid_values_db1: int = 0
+    total_uuid_values_db2: int = 0
+    uuid_integrity_check: bool = True  # True if UUID counts match between databases
 
 
 @dataclass
@@ -178,6 +196,11 @@ class ComparisonOptions:
     explicit_uuid_columns: List[str] = field(default_factory=list)
     auto_detect_uuids: bool = True
     uuid_patterns: List[str] = field(default_factory=list)
+    uuid_comparison_mode: str = 'exclude'  # 'exclude', 'include_with_tracking', 'include_normal'
+    
+    # Unique identifier patterns for tracking (beyond traditional UUIDs)
+    unique_id_patterns: List[str] = field(default_factory=list)  # e.g., r'^(report|record)-\d+$'
+    unique_id_normalize_patterns: List[Dict[str, str]] = field(default_factory=list)  # Pattern normalization rules
     
     # Timestamp handling
     auto_detect_timestamps: bool = True

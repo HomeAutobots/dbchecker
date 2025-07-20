@@ -16,7 +16,7 @@ from dbchecker.exceptions import DatabaseComparisonError
 def main():
     """Main entry point for the command-line interface"""
     parser = argparse.ArgumentParser(
-        description="Compare two SQLite databases for structural and data equality while ignoring UUID differences"
+        description="Compare two SQLite databases for structural and data equality with flexible UUID handling options"
     )
     
     # Required arguments
@@ -40,6 +40,24 @@ def main():
         nargs="*",
         default=[],
         help="Custom regex patterns for UUID detection"
+    )
+    parser.add_argument(
+        "--uuid-comparison-mode",
+        choices=['exclude', 'include_with_tracking', 'include_normal'],
+        default='exclude',
+        help="How to handle UUIDs: 'exclude' (default, ignore UUIDs), 'include_with_tracking' (include UUIDs but track statistics), 'include_normal' (treat UUIDs as regular columns)"
+    )
+    parser.add_argument(
+        "--unique-id-patterns",
+        nargs="*",
+        default=[],
+        help="Custom regex patterns for detecting unique identifiers (e.g., '^(report|record)-\\d+$' for report-123 or record-456)"
+    )
+    parser.add_argument(
+        "--normalize-patterns",
+        nargs="*",
+        default=[],
+        help="Pattern normalization rules in format 'pattern:replacement' (e.g., '^(report|record)-(.+)$:id-\\2' to normalize report-123 and record-123 to id-123)"
     )
     
     # Column exclusion options
@@ -153,11 +171,26 @@ def main():
     Path(args.output_dir).mkdir(parents=True, exist_ok=True)
     
     try:
+        # Parse normalization patterns
+        normalize_patterns = []
+        for pattern_rule in args.normalize_patterns:
+            if ':' in pattern_rule:
+                pattern, replacement = pattern_rule.split(':', 1)
+                normalize_patterns.append({
+                    'pattern': pattern,
+                    'replacement': replacement
+                })
+            else:
+                print(f"Warning: Invalid normalize pattern format '{pattern_rule}'. Expected 'pattern:replacement'", file=sys.stderr)
+        
         # Configure comparison options
         options = ComparisonOptions(
             explicit_uuid_columns=args.uuid_columns,
             auto_detect_uuids=not args.no_auto_detect_uuids,
             uuid_patterns=args.uuid_patterns,
+            uuid_comparison_mode=args.uuid_comparison_mode,
+            unique_id_patterns=args.unique_id_patterns,
+            unique_id_normalize_patterns=normalize_patterns,
             excluded_columns=args.exclude_columns,
             excluded_column_patterns=args.exclude_column_patterns,
             compare_schema=not args.data_only,

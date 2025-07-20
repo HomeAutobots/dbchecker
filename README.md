@@ -6,7 +6,9 @@ A Python application that compares two SQLite databases for structural and data 
 
 - **Schema Comparison**: Compare table structures, columns, constraints, indexes, triggers, and views
 - **Data Comparison**: Compare actual data while handling UUID and timestamp exclusions
-- **UUID Detection**: Automatic detection of UUID columns plus support for explicit column specification
+- **Smart Unique ID Handling**: Three modes - exclude (default), include with tracking for data integrity verification, or include as normal columns
+- **Custom Identifier Patterns**: Detect and normalize any unique identifier format (e.g., `report-123` vs `record-123`)
+- **UUID Detection**: Automatic detection of UUID columns plus support for explicit column specification  
 - **Timestamp Detection**: Automatic detection and exclusion of timestamp columns (DATETIME, TIMESTAMP, DATE, TIME, and common naming patterns)
 - **Multiple Output Formats**: JSON, HTML, Markdown, and CSV reports
 - **Performance Optimized**: Configurable batch processing and parallel table comparison
@@ -38,6 +40,18 @@ dbchecker database1.db database2.db
 
 # With explicit UUID columns
 dbchecker database1.db database2.db --uuid-columns id user_id entity_guid
+
+# UUID tracking mode - include UUIDs but track statistics for data integrity
+dbchecker database1.db database2.db --uuid-comparison-mode include_with_tracking
+
+# Custom unique identifier patterns (e.g., report-123 vs record-123)
+dbchecker database1.db database2.db \
+  --uuid-comparison-mode include_with_tracking \
+  --unique-id-patterns '^(report|record)-\d+$' \
+  --normalize-patterns '^(report|record)-(\d+)$:id-\2'
+
+# Treat UUIDs as normal columns (will show all UUID differences)
+dbchecker database1.db database2.db --uuid-comparison-mode include_normal
 
 # Exclude specific columns from comparison
 dbchecker database1.db database2.db --exclude-columns internal_notes debug_field temp_data
@@ -100,9 +114,25 @@ The tool follows a modular architecture with the following core components:
 
 ## UUID and Timestamp Handling
 
-The tool intelligently handles UUIDs and timestamps that should be excluded from comparison:
+The tool intelligently handles UUIDs and timestamps with flexible options:
 
-### UUID Exclusions
+### UUID Handling Modes
+1. **Exclude Mode** (default): Completely excludes UUID columns from comparison
+   - Use when you only care about business data
+   - Traditional behavior - databases with different UUIDs but same business data show as identical
+   
+2. **Include with Tracking Mode**: Includes UUIDs but tracks detailed statistics
+   - Use when you need to verify data relationships and integrity
+   - Tracks UUID counts, unique values, and data consistency
+   - Ideal for production vs staging comparisons
+   - Command: `--uuid-comparison-mode include_with_tracking`
+   
+3. **Include Normal Mode**: Treats UUIDs as regular columns
+   - Use when you want to see all UUID differences explicitly
+   - Will show differences for every UUID mismatch
+   - Command: `--uuid-comparison-mode include_normal`
+
+### UUID Detection
 1. **Explicit UUID Columns**: Specify columns by name using `--uuid-columns`
 2. **Automatic Detection**: Detects common UUID patterns and column names
 3. **Custom Patterns**: Add custom regex patterns for UUID detection

@@ -243,6 +243,12 @@ class DatabaseComparator:
         total_rows_compared = 0
         total_differences_found = 0
         
+        # UUID statistics
+        total_uuid_columns = 0
+        total_uuid_values_db1 = 0
+        total_uuid_values_db2 = 0
+        uuid_integrity_check = True
+        
         schema_identical_tables = 0
         
         if schema_result:
@@ -261,7 +267,7 @@ class DatabaseComparator:
                 tables_with_differences = len(schema_result.table_differences)
         
         if data_result:
-            # Count data differences
+            # Count data differences and UUID statistics
             data_identical_tables = 0
             for table_comp in data_result.table_results.values():
                 total_rows_compared += table_comp.row_count_db1 + table_comp.row_count_db2
@@ -274,6 +280,16 @@ class DatabaseComparator:
                 
                 if not has_differences:
                     data_identical_tables += 1
+                
+                # Collect UUID statistics
+                if table_comp.uuid_statistics:
+                    total_uuid_columns += len(table_comp.uuid_statistics.uuid_columns)
+                    total_uuid_values_db1 += table_comp.uuid_statistics.total_uuid_values_db1
+                    total_uuid_values_db2 += table_comp.uuid_statistics.total_uuid_values_db2
+                    
+                    # Check UUID integrity - expect same number of UUID values
+                    if table_comp.uuid_statistics.total_uuid_values_db1 != table_comp.uuid_statistics.total_uuid_values_db2:
+                        uuid_integrity_check = False
             
             total_differences_found = data_result.total_differences
             
@@ -291,7 +307,11 @@ class DatabaseComparator:
             identical_tables=identical_tables,
             tables_with_differences=tables_with_differences,
             total_rows_compared=total_rows_compared,
-            total_differences_found=total_differences_found
+            total_differences_found=total_differences_found,
+            total_uuid_columns=total_uuid_columns,
+            total_uuid_values_db1=total_uuid_values_db1,
+            total_uuid_values_db2=total_uuid_values_db2,
+            uuid_integrity_check=uuid_integrity_check
         )
     
     def generate_reports(self, comparison_result: ComparisonResult, 
