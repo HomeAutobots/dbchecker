@@ -205,3 +205,225 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Project-specific files
+# SQLite databases (test files, examples, temp databases)
+*.db
+*.sqlite
+*.sqlite3
+*.db3
+
+# Database comparison reports
+comparison_report.*
+comparison_results/
+reports/
+output/
+results/
+
+# Test databases and fixtures
+test_databases/
+fixtures/
+sample_data/
+
+# Configuration files with sensitive data
+config.ini
+config.yaml
+config.json
+.env.local
+.env.production
+
+# Backup files
+*.bak
+*.backup
+*.orig
+*.tmp
+
+# OS-specific files
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# Editor files
+# Vim
+*.swp
+*.swo
+*~
+.netrwhist
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+
+# Sublime Text
+*.sublime-workspace
+*.sublime-project
+
+# Database comparison specific
+# Performance benchmarks
+benchmark_results/
+performance_tests/
+
+# Large test files
+large_test_files/
+stress_test_data/
+
+# Temporary comparison files
+temp_comparison/
+.temp/
+comparison_cache/
+
+# Log files specific to this project
+dbchecker.log
+comparison.log
+debug.log
+error.log
+
+# Generated documentation
+docs/build/
+docs/_build/
+docs/html/
+docs/latex/
+
+# Package build artifacts
+*.tar.gz
+*.zip
+*.whl
+
+# Development tools
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.mypy_cache/
+
+# IDE specific
+# VS Code
+.vscode/settings.json
+.vscode/tasks.json
+.vscode/launch.json
+.vscode/extensions.json
+!.vscode/settings.json.example
+
+# PyCharm
+.idea/
+*.iml
+*.iws
+
+# Project dependencies lockfiles (uncomment if using specific tools)
+# Pipfile.lock
+# poetry.lock
+# requirements-dev.txt
+
+# Virtual environments (additional patterns)
+.virtualenv
+.conda
+conda-meta/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+*.ipynb
+
+# Data files (if any sample data is included)
+data/
+datasets/
+sample_databases/
+
+# Binary files
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Compiled Python files
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+*.py[cod]
+
+# Distribution / packaging (additional)
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Security and credentials
+.secrets
+.credentials
+secrets.json
+credentials.json
+auth.json
+
+# Runtime files
+*.pid
+*.sock
+*.lock
+
+# Application specific caches
+.cache/
+cache/
+.dbchecker_cache/
+
+# Test results and reports
+test-results/
+test-reports/
+junit.xml
+nose2-junit.xml
+
+# Memory dumps and core files
+core
+*.core
+*.dump
+*.dmp
+
+# Profiling data
+*.prof
+*.pstats
+profile_output/
+
+# Documentation builds
+site/
+_site/
+
+# Temporary files created by the application
+*.tmp
+*.temp
+temp_*
+temporary_*
