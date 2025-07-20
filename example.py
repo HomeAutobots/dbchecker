@@ -108,7 +108,8 @@ def demo_identical_databases():
         options = ComparisonOptions(
             auto_detect_uuids=True,
             verbose=True,
-            output_format=['json']
+            output_format=['json'],
+            parallel_tables=False  # Disable parallel processing
         )
         comparator.set_comparison_options(options)
         
@@ -143,7 +144,8 @@ def demo_different_databases():
         options = ComparisonOptions(
             auto_detect_uuids=True,
             verbose=True,
-            output_format=['json', 'markdown']
+            output_format=['json', 'markdown'],
+            parallel_tables=False  # Disable parallel processing
         )
         comparator.set_comparison_options(options)
         
@@ -183,7 +185,8 @@ def demo_report_generation():
         
         options = ComparisonOptions(
             verbose=False,
-            output_format=['json', 'html', 'markdown', 'csv']
+            output_format=['json', 'html', 'markdown', 'csv'],
+            parallel_tables=False  # Disable parallel processing
         )
         comparator.set_comparison_options(options)
         

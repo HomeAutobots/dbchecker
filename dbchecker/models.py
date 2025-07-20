@@ -41,6 +41,14 @@ class ForeignKey:
 
 
 @dataclass
+class Constraint:
+    """Represents a generic database constraint"""
+    name: str
+    type: str
+    definition: str
+
+
+@dataclass
 class UniqueConstraint:
     """Represents a unique constraint"""
     name: str
@@ -180,7 +188,7 @@ class ComparisonOptions:
     
     # Performance options
     batch_size: int = 1000
-    parallel_tables: bool = True
+    parallel_tables: bool = False  # Disabled by default due to SQLite threading limitations
     max_workers: int = 4
     
     # Output options

@@ -34,6 +34,8 @@ class DatabaseConnector:
     
     def execute_query(self, query: str, params: tuple = ()) -> List[Dict[str, Any]]:
         """Execute a query and return results"""
+        if not self.connection:
+            raise DatabaseConnectionError("No database connection")
         try:
             cursor = self.connection.cursor()
             cursor.execute(query, params)

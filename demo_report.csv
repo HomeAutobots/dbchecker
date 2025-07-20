@@ -1,0 +1,5 @@
+Table,Type,Row_Identifier,Field,Value_DB1,Value_DB2
+users,MISSING_IN_DB2,uuid-user1,,PRESENT,MISSING
+users,MISSING_IN_DB1,uuid-user1-different,,MISSING,PRESENT
+posts,MISSING_IN_DB2,uuid-post1,,PRESENT,MISSING
+posts,MISSING_IN_DB1,uuid-post1,,MISSING,PRESENT

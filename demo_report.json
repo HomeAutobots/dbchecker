@@ -1,0 +1,39 @@
+{
+  "timestamp": "2025-07-20T08:50:32.250033",
+  "summary": {
+    "total_tables": 2,
+    "identical_tables": 0,
+    "tables_with_differences": 2,
+    "total_rows_compared": 10,
+    "total_differences_found": 4
+  },
+  "schema_comparison": {
+    "identical": true,
+    "missing_in_db1": [],
+    "missing_in_db2": [],
+    "table_differences": {}
+  },
+  "data_comparison": {
+    "total_differences": 4,
+    "table_results": {
+      "users": {
+        "row_count_db1": 3,
+        "row_count_db2": 3,
+        "matching_rows": 2,
+        "rows_only_in_db1_count": 1,
+        "rows_only_in_db2_count": 1,
+        "rows_with_differences_count": 0,
+        "sample_differences": []
+      },
+      "posts": {
+        "row_count_db1": 2,
+        "row_count_db2": 2,
+        "matching_rows": 1,
+        "rows_only_in_db1_count": 1,
+        "rows_only_in_db2_count": 1,
+        "rows_with_differences_count": 0,
+        "sample_differences": []
+      }
+    }
+  }
+}
