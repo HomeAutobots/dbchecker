@@ -42,6 +42,20 @@ def main():
         help="Custom regex patterns for UUID detection"
     )
     
+    # Column exclusion options
+    parser.add_argument(
+        "--exclude-columns",
+        nargs="*",
+        default=[],
+        help="Specific column names to exclude from comparison"
+    )
+    parser.add_argument(
+        "--exclude-column-patterns",
+        nargs="*",
+        default=[],
+        help="Regex patterns for column names to exclude from comparison"
+    )
+    
     # Comparison options
     parser.add_argument(
         "--schema-only", 
@@ -144,6 +158,8 @@ def main():
             explicit_uuid_columns=args.uuid_columns,
             auto_detect_uuids=not args.no_auto_detect_uuids,
             uuid_patterns=args.uuid_patterns,
+            excluded_columns=args.exclude_columns,
+            excluded_column_patterns=args.exclude_column_patterns,
             compare_schema=not args.data_only,
             compare_data=not args.schema_only,
             case_sensitive=not args.case_insensitive,

@@ -172,6 +172,26 @@ class MetadataDetector:
         
         return list(set(sequence_columns))
     
+    def _get_excluded_columns(self, table_structure: TableStructure) -> List[str]:
+        """Get user-specified excluded columns (both explicit and pattern-based)"""
+        excluded_columns = []
+        
+        # Add explicitly specified columns
+        excluded_columns.extend(self.options.excluded_columns)
+        
+        # Check pattern-based exclusions
+        for column in table_structure.columns:
+            for pattern in self.options.excluded_column_patterns:
+                try:
+                    if re.match(pattern.lower(), column.name.lower()):
+                        excluded_columns.append(column.name)
+                        break
+                except re.error:
+                    # Skip invalid regex patterns
+                    continue
+        
+        return list(set(excluded_columns))
+    
     def _appears_sequential(self, sample_data: List[Dict[str, Any]], column_name: str) -> bool:
         """Check if a column appears to contain sequential values (auto-increment)"""
         try:
@@ -207,12 +227,16 @@ class MetadataDetector:
         metadata_columns = self.detect_metadata_columns(table_structure, sample_data)
         sequence_columns = self.detect_sequence_columns(table_structure, sample_data)
         
+        # Get user-specified excluded columns
+        excluded_columns = self._get_excluded_columns(table_structure)
+        
         # Combine all exclusions
         all_excluded = list(set(
             uuid_columns + 
             timestamp_columns + 
             metadata_columns + 
-            sequence_columns
+            sequence_columns +
+            excluded_columns
         ))
         
         return {
@@ -220,6 +244,7 @@ class MetadataDetector:
             'timestamp_columns': timestamp_columns,
             'metadata_columns': metadata_columns,
             'sequence_columns': sequence_columns,
+            'excluded_columns': excluded_columns,
             'all_excluded': all_excluded
         }
     
@@ -238,6 +263,9 @@ class MetadataDetector:
         
         if exclusions['sequence_columns']:
             summary_parts.append(f"Sequence columns: {', '.join(exclusions['sequence_columns'])}")
+        
+        if exclusions.get('excluded_columns'):
+            summary_parts.append(f"User-excluded columns: {', '.join(exclusions['excluded_columns'])}")
         
         if not summary_parts:
             return "No columns excluded from comparison"

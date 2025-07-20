@@ -194,6 +194,10 @@ class ComparisonOptions:
     explicit_sequence_columns: List[str] = field(default_factory=list)
     sequence_patterns: List[str] = field(default_factory=list)
     
+    # Column exclusions - for user-specified columns to exclude from comparison
+    excluded_columns: List[str] = field(default_factory=list)
+    excluded_column_patterns: List[str] = field(default_factory=list)
+    
     # Comparison options
     compare_schema: bool = True
     compare_data: bool = True

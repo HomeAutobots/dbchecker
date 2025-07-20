@@ -39,6 +39,15 @@ dbchecker database1.db database2.db
 # With explicit UUID columns
 dbchecker database1.db database2.db --uuid-columns id user_id entity_guid
 
+# Exclude specific columns from comparison
+dbchecker database1.db database2.db --exclude-columns internal_notes debug_field temp_data
+
+# Exclude columns by pattern
+dbchecker database1.db database2.db --exclude-column-patterns ".*debug.*" ".*temp.*" ".*internal.*"
+
+# Combine exclusions with UUID handling
+dbchecker database1.db database2.db --uuid-columns id --exclude-columns admin_notes created_by
+
 # Schema only comparison
 dbchecker database1.db database2.db --schema-only
 
@@ -62,6 +71,8 @@ comparator = DatabaseComparator(
 # Configure options
 options = ComparisonOptions(
     auto_detect_uuids=True,
+    excluded_columns=['internal_notes', 'admin_comments', 'debug_field'],
+    excluded_column_patterns=[r'.*temp.*', r'.*debug.*'],
     compare_schema=True,
     compare_data=True,
     output_format=['json', 'html'],
@@ -103,6 +114,11 @@ The tool intelligently handles UUIDs and timestamps that should be excluded from
    - `*timestamp*`, `*created*`, `*updated*`, `*modified*`, `*deleted*`
    - `*_at`, `*_time`, `*_date`
 3. **Automatic Exclusion**: Timestamp columns are automatically excluded from data comparison since they often differ between database environments
+
+### User-Specified Column Exclusions
+1. **Explicit Column Names**: Exclude specific columns by name using `--exclude-columns`
+2. **Pattern-Based Exclusions**: Use regex patterns to exclude columns with `--exclude-column-patterns`
+3. **Common Use Cases**: Exclude internal notes, debug fields, temporary data, or any application-specific columns that shouldn't be compared
 
 ## Configuration Options
 
