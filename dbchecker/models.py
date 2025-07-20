@@ -179,6 +179,21 @@ class ComparisonOptions:
     auto_detect_uuids: bool = True
     uuid_patterns: List[str] = field(default_factory=list)
     
+    # Timestamp handling
+    auto_detect_timestamps: bool = True
+    explicit_timestamp_columns: List[str] = field(default_factory=list)
+    timestamp_patterns: List[str] = field(default_factory=list)
+    
+    # Metadata exclusions
+    auto_detect_metadata: bool = True
+    explicit_metadata_columns: List[str] = field(default_factory=list)
+    metadata_patterns: List[str] = field(default_factory=list)
+    
+    # Auto-increment/sequence exclusions
+    auto_detect_sequences: bool = True
+    explicit_sequence_columns: List[str] = field(default_factory=list)
+    sequence_patterns: List[str] = field(default_factory=list)
+    
     # Comparison options
     compare_schema: bool = True
     compare_data: bool = True

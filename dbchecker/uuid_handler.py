@@ -35,13 +35,10 @@ class UUIDHandler:
         if column_name.lower() in {col.lower() for col in self.explicit_uuid_columns}:
             return True
         
-        # Check common UUID column name patterns
+        # Check common UUID column name patterns (more conservative)
         uuid_name_patterns = [
             r'.*uuid.*',
-            r'.*guid.*', 
-            r'.*id$',
-            r'^id$',
-            r'.*_id$'
+            r'.*guid.*'
         ]
         
         for pattern in uuid_name_patterns:

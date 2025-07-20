@@ -1,70 +1,31 @@
 """
-Data comparator module for comparing database contents while handling UUIDs and timestamps.
+Data comparator module for comparing database contents while handling UUIDs, timestamps, and metadata.
 """
 
 import hashlib
 import json
 import re
-from typing import Dict, List, Any, Tuple, Set
-from .models import TableDataComparison, RowDifference, FieldDifference, DataComparisonResult
+from typing import Dict, List, Any, Tuple, Set, Optional
+from .models import TableDataComparison, RowDifference, FieldDifference, DataComparisonResult, ComparisonOptions
 from .uuid_handler import UUIDHandler
 from .database_connector import DatabaseConnector
+from .metadata_detector import MetadataDetector
 from .exceptions import DataComparisonError
 
 
 class DataComparator:
-    """Compares actual data between databases while handling UUID and timestamp exclusions"""
+    """Compares actual data between databases while handling UUID, timestamp, and metadata exclusions"""
     
-    def __init__(self, uuid_handler: UUIDHandler):
-        """Initialize data comparator with UUID handler"""
+    def __init__(self, uuid_handler: UUIDHandler, options: ComparisonOptions):
+        """Initialize data comparator with UUID handler and comparison options"""
         self.uuid_handler = uuid_handler
+        self.options = options
+        self.metadata_detector = MetadataDetector(options)
     
-    def _detect_timestamp_columns(self, table_structure) -> List[str]:
-        """Detect timestamp columns by name patterns and data types"""
-        timestamp_columns = []
-        
-        # Common timestamp column name patterns
-        timestamp_name_patterns = [
-            r'.*timestamp.*',
-            r'.*created.*',
-            r'.*updated.*',
-            r'.*modified.*',
-            r'.*deleted.*',
-            r'.*_at$',
-            r'.*_time$',
-            r'.*_date$'
-        ]
-        
-        # Common timestamp data types
-        timestamp_data_types = {
-            'DATETIME', 'TIMESTAMP', 'DATE', 'TIME',
-            'datetime', 'timestamp', 'date', 'time'
-        }
-        
-        for column in table_structure.columns:
-            # Check by data type first
-            if column.type.upper() in timestamp_data_types:
-                timestamp_columns.append(column.name)
-                continue
-            
-            # Check by column name patterns
-            for pattern in timestamp_name_patterns:
-                if re.match(pattern, column.name.lower()):
-                    timestamp_columns.append(column.name)
-                    break
-        
-        return timestamp_columns
-    
-    def get_excluded_columns_info(self, table_structure) -> Dict[str, List[str]]:
+    def get_excluded_columns_info(self, table_structure, sample_data: Optional[List[Dict[str, Any]]] = None) -> Dict[str, List[str]]:
         """Get information about which columns are excluded from comparison"""
-        uuid_columns = self.uuid_handler.detect_uuid_columns(table_structure, None)
-        timestamp_columns = self._detect_timestamp_columns(table_structure)
-        
-        return {
-            'uuid_columns': uuid_columns,
-            'timestamp_columns': timestamp_columns,
-            'all_excluded': list(set(uuid_columns + timestamp_columns))
-        }
+        uuid_columns = self.uuid_handler.detect_uuid_columns(table_structure, sample_data)
+        return self.metadata_detector.get_all_excluded_columns(table_structure, uuid_columns, sample_data)
     
     def compare_all_tables(self, conn1: DatabaseConnector, conn2: DatabaseConnector, 
                           table_names: List[str], batch_size: int = 1000) -> DataComparisonResult:
@@ -94,18 +55,19 @@ class DataComparator:
     def compare_table_data(self, table_name: str, conn1: DatabaseConnector, 
                           conn2: DatabaseConnector, batch_size: int = 1000) -> TableDataComparison:
         """Compare data in a specific table between two databases"""
-        # Get table structure to detect UUID and timestamp columns
+        # Get table structure to detect UUID and metadata columns
         table_structure1 = conn1.get_table_structure(table_name)
         
-        # Get sample data for UUID detection
+        # Get sample data for detection algorithms
         sample_data1 = conn1.get_table_data(table_name, limit=100)
-        uuid_columns = self.uuid_handler.detect_uuid_columns(table_structure1, sample_data1)
         
-        # Detect timestamp columns
-        timestamp_columns = self._detect_timestamp_columns(table_structure1)
+        # Get all excluded columns (UUIDs, timestamps, metadata, sequences)
+        exclusion_info = self.get_excluded_columns_info(table_structure1, sample_data1)
+        exclude_columns = exclusion_info['all_excluded']
         
-        # Combine columns to exclude from comparison
-        exclude_columns = list(set(uuid_columns + timestamp_columns))
+        if self.options.verbose:
+            summary = self.metadata_detector.get_exclusion_summary(exclusion_info)
+            print(f"Table {table_name}: {summary}")
         
         # Get all data from both tables
         data1 = conn1.get_table_data(table_name)
@@ -114,7 +76,7 @@ class DataComparator:
         row_count_db1 = len(data1)
         row_count_db2 = len(data2)
         
-        # Find matching rows and differences (excluding UUID and timestamp columns)
+        # Find matching rows and differences (excluding detected columns)
         matching_result = self.find_matching_rows(data1, data2, exclude_columns)
         
         # Compare matched rows for differences

@@ -32,7 +32,10 @@ class DatabaseComparator:
         # Initialize components
         self.uuid_handler = UUIDHandler(explicit_uuid_columns=uuid_columns or [])
         self.schema_comparator = SchemaComparator()
-        self.data_comparator = DataComparator(self.uuid_handler)
+        
+        # Default options (will be updated when set_comparison_options is called)
+        self.options = ComparisonOptions()
+        self.data_comparator = DataComparator(self.uuid_handler, self.options)
         self.report_generator = ReportGenerator()
         
         # Default options
@@ -45,6 +48,9 @@ class DatabaseComparator:
     def set_comparison_options(self, options: ComparisonOptions):
         """Set comparison options"""
         self.options = options
+        
+        # Reinitialize data comparator with new options
+        self.data_comparator = DataComparator(self.uuid_handler, self.options)
         
         # Update UUID handler with new options
         if options.explicit_uuid_columns:
