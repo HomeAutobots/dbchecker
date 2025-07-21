@@ -320,16 +320,16 @@ class DatabaseComparator:
         for format_type in self.options.output_format:
             try:
                 if format_type == "json":
-                    content = self.report_generator.to_json(comparison_result)
+                    content = self.report_generator.generate_report(comparison_result, "json")
                     filename = f"{filename_prefix}.json"
                 elif format_type == "html":
-                    content = self.report_generator.to_html(comparison_result)
+                    content = self.report_generator.generate_report(comparison_result, "html")
                     filename = f"{filename_prefix}.html"
                 elif format_type == "markdown":
-                    content = self.report_generator.to_markdown(comparison_result)
+                    content = self.report_generator.generate_report(comparison_result, "markdown")
                     filename = f"{filename_prefix}.md"
                 elif format_type == "csv":
-                    content = self.report_generator.to_csv(comparison_result)
+                    content = self.report_generator.generate_report(comparison_result, "csv")
                     filename = f"{filename_prefix}.csv"
                 else:
                     if self.options.verbose:
