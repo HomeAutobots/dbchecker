@@ -1,0 +1,12 @@
+{
+  "timestamp": "2025-07-20T16:51:31.557616",
+  "test_type": "unit",
+  "success": false,
+  "reports": {
+    "html": "pytest_report_20250720_165130.html",
+    "json": "pytest_report_20250720_165130.json",
+    "coverage_html": "pytest_coverage_html_20250720_165130/index.html",
+    "coverage_xml": "pytest_coverage_20250720_165130.xml",
+    "coverage_json": "pytest_coverage_20250720_165130.json"
+  }
+}
