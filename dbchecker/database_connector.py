@@ -55,6 +55,11 @@ class DatabaseConnector:
     
     def get_table_structure(self, table_name: str) -> TableStructure:
         """Get complete structure of a table"""
+        # Check if table exists first
+        table_names = self.get_table_names()
+        if table_name not in table_names:
+            raise SchemaExtractionError(f"Table '{table_name}' does not exist in the database")
+        
         columns = self._get_columns(table_name)
         primary_key = self._get_primary_key(table_name)
         foreign_keys = self._get_foreign_keys(table_name)

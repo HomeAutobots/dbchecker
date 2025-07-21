@@ -238,12 +238,33 @@ class DataComparator:
         }
     
     def get_row_hash(self, row: Dict[str, Any], exclude_columns: List[str]) -> str:
-        """Generate a hash for a row, excluding specified columns"""
-        # Normalize row for comparison
-        normalized_row = self.uuid_handler.normalize_row_for_comparison(row, exclude_columns)
+        """Generate a hash for a row, using primary key or ID for matching"""
+        # For row matching, we should use primary key or ID field, not all fields
+        # This allows us to detect when the same logical row has different data
         
-        # Sort keys for consistent hashing
-        sorted_items = sorted(normalized_row.items())
+        # Try to find primary key field(s) - common patterns
+        key_fields = []
+        for field_name in ['id', 'pk', 'primary_key']:
+            if field_name in row:
+                key_fields.append(field_name)
+                break
+        
+        # If no standard ID field found, look for fields ending in '_id'
+        if not key_fields:
+            for field_name in row.keys():
+                if field_name.endswith('_id') and field_name not in exclude_columns:
+                    key_fields.append(field_name)
+                    break
+        
+        # If still no key field, fall back to all non-excluded fields (original behavior)
+        if not key_fields:
+            # Original logic for cases where there's no clear primary key
+            normalized_row = self.uuid_handler.normalize_row_for_comparison(row, exclude_columns)
+            sorted_items = sorted(normalized_row.items())
+        else:
+            # Use only the key fields for row identification
+            key_values = [(field, row[field]) for field in key_fields]
+            sorted_items = sorted(key_values)
         
         # Create hash
         row_string = json.dumps(sorted_items, sort_keys=True, default=str)

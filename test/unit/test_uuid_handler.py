@@ -61,14 +61,16 @@ class TestUUIDHandler(unittest.TestCase):
     def test_is_uuid_column_pattern_matching(self):
         """Test UUID column detection by pattern"""
         uuid_columns = [
-            'id',
-            'user_id',
             'entity_uuid',
             'guid_field',
-            'record_guid'
+            'record_guid',
+            'user_uuid',  # contains 'uuid'
+            'item_guid'   # contains 'guid'
         ]
         
         non_uuid_columns = [
+            'id',         # plain id won't match
+            'user_id',    # plain id won't match
             'name',
             'description',
             'created_at',

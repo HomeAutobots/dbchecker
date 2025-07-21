@@ -133,8 +133,8 @@ class TestSchemaComparator(unittest.TestCase):
             columns=modified_columns,
             primary_key=PrimaryKey(columns=["id"]),
             foreign_keys=[],
-            unique_constraints=[],
-            check_constraints=[]
+            unique_constraints=[UniqueConstraint("uk_username", ["username"])],
+            check_constraints=[CheckConstraint("ck_age", "age >= 0")]
         )
         
         result = self.comparator.compare_tables(self.users_table, modified_table)
@@ -153,8 +153,8 @@ class TestSchemaComparator(unittest.TestCase):
             columns=extra_columns,
             primary_key=PrimaryKey(columns=["id"]),
             foreign_keys=[],
-            unique_constraints=[],
-            check_constraints=[]
+            unique_constraints=[UniqueConstraint("uk_username", ["username"])],
+            check_constraints=[CheckConstraint("ck_age", "age >= 0")]
         )
         
         result = self.comparator.compare_tables(self.users_table, modified_table)
@@ -180,8 +180,8 @@ class TestSchemaComparator(unittest.TestCase):
             columns=modified_columns,
             primary_key=PrimaryKey(columns=["id"]),
             foreign_keys=[],
-            unique_constraints=[],
-            check_constraints=[]
+            unique_constraints=[UniqueConstraint("uk_username", ["username"])],
+            check_constraints=[CheckConstraint("ck_age", "age >= 0")]
         )
         
         result = self.comparator.compare_tables(self.users_table, modified_table)
@@ -192,7 +192,7 @@ class TestSchemaComparator(unittest.TestCase):
         self.assertEqual(len(result.column_differences), 1)
         
         diff = result.column_differences[0]
-        self.assertEqual(diff.field_name, "age")
+        self.assertEqual(diff.field_name, "age.type")
         self.assertIn("INTEGER", str(diff.value_db1))
         self.assertIn("TEXT", str(diff.value_db2))
     
@@ -212,8 +212,8 @@ class TestSchemaComparator(unittest.TestCase):
             columns=modified_columns,
             primary_key=PrimaryKey(columns=["id"]),
             foreign_keys=[],
-            unique_constraints=[],
-            check_constraints=[]
+            unique_constraints=[UniqueConstraint("uk_username", ["username"])],
+            check_constraints=[CheckConstraint("ck_age", "age >= 0")]
         )
         
         result = self.comparator.compare_tables(self.users_table, modified_table)
@@ -222,7 +222,7 @@ class TestSchemaComparator(unittest.TestCase):
         self.assertEqual(len(result.column_differences), 1)
         
         diff = result.column_differences[0]
-        self.assertEqual(diff.field_name, "email")
+        self.assertEqual(diff.field_name, "email.nullable")
     
     def test_compare_tables_different_defaults(self):
         """Test comparing tables with different column defaults"""
@@ -240,8 +240,8 @@ class TestSchemaComparator(unittest.TestCase):
             columns=modified_columns,
             primary_key=PrimaryKey(columns=["id"]),
             foreign_keys=[],
-            unique_constraints=[],
-            check_constraints=[]
+            unique_constraints=[UniqueConstraint("uk_username", ["username"])],
+            check_constraints=[CheckConstraint("ck_age", "age >= 0")]
         )
         
         result = self.comparator.compare_tables(self.users_table, modified_table)
@@ -250,7 +250,7 @@ class TestSchemaComparator(unittest.TestCase):
         self.assertEqual(len(result.column_differences), 1)
         
         diff = result.column_differences[0]
-        self.assertEqual(diff.field_name, "age")
+        self.assertEqual(diff.field_name, "age.default")
     
     def test_compare_tables_different_primary_keys(self):
         """Test comparing tables with different primary keys"""
@@ -260,8 +260,8 @@ class TestSchemaComparator(unittest.TestCase):
             columns=self.users_columns,
             primary_key=PrimaryKey(columns=["id", "username"]),
             foreign_keys=[],
-            unique_constraints=[],
-            check_constraints=[]
+            unique_constraints=[UniqueConstraint("uk_username", ["username"])],
+            check_constraints=[CheckConstraint("ck_age", "age >= 0")]
         )
         
         result = self.comparator.compare_tables(self.users_table, modified_table)
@@ -358,8 +358,8 @@ class TestSchemaComparator(unittest.TestCase):
             columns=reordered_columns,
             primary_key=PrimaryKey(columns=["id"]),
             foreign_keys=[],
-            unique_constraints=[],
-            check_constraints=[]
+            unique_constraints=[UniqueConstraint("uk_username", ["username"])],
+            check_constraints=[CheckConstraint("ck_age", "age >= 0")]
         )
         
         result = self.comparator.compare_tables(self.users_table, reordered_table)

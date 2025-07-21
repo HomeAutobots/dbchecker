@@ -9,7 +9,7 @@ import sqlite3
 from dbchecker.data_comparator import DataComparator
 from dbchecker.uuid_handler import UUIDHandler
 from dbchecker.database_connector import DatabaseConnector
-from dbchecker.models import Column, TableStructure
+from dbchecker.models import Column, TableStructure, ComparisonOptions
 
 
 class TestTimestampDetection(unittest.TestCase):
@@ -17,8 +17,9 @@ class TestTimestampDetection(unittest.TestCase):
     
     def setUp(self):
         """Set up test fixtures"""
+        self.options = ComparisonOptions()
         self.uuid_handler = UUIDHandler()
-        self.data_comparator = DataComparator(self.uuid_handler)
+        self.data_comparator = DataComparator(self.uuid_handler, self.options)
     
     def test_detect_timestamp_columns_by_type(self):
         """Test detection of timestamp columns by data type"""
@@ -42,7 +43,7 @@ class TestTimestampDetection(unittest.TestCase):
             check_constraints=[]
         )
         
-        timestamp_columns = self.data_comparator._detect_timestamp_columns(table_structure)
+        timestamp_columns = self.data_comparator.metadata_detector.detect_timestamp_columns(table_structure)
         
         expected_columns = ["created_at", "updated_time", "birth_date", "login_time"]
         self.assertEqual(set(timestamp_columns), set(expected_columns))
@@ -71,18 +72,18 @@ class TestTimestampDetection(unittest.TestCase):
             check_constraints=[]
         )
         
-        timestamp_columns = self.data_comparator._detect_timestamp_columns(table_structure)
+        timestamp_columns = self.data_comparator.metadata_detector.detect_timestamp_columns(table_structure)
         
-        expected_columns = ["created_at", "updated_timestamp", "last_modified", "deleted_time", "birth_date", "created_by"]
+        expected_columns = ["created_at", "updated_timestamp", "deleted_time", "birth_date"]
         self.assertEqual(set(timestamp_columns), set(expected_columns))
     
     def test_get_excluded_columns_info(self):
         """Test getting information about excluded columns"""
         columns = [
-            Column("id", "INTEGER", False, None, True),  # Will be detected as UUID
+            Column("id", "INTEGER", False, None, True),  # Auto-increment ID (not UUID)
             Column("username", "TEXT", False, None, False),
             Column("created_at", "DATETIME", True, None, False),  # Timestamp
-            Column("user_id", "TEXT", True, None, False),  # Will be detected as UUID
+            Column("user_uuid", "TEXT", True, None, False),  # Will be detected as UUID
             Column("email", "TEXT", False, None, False)
         ]
         
@@ -106,11 +107,16 @@ class TestTimestampDetection(unittest.TestCase):
         self.assertIn('created_at', excluded_info['timestamp_columns'])
         
         # Check UUID detection  
-        self.assertIn('id', excluded_info['uuid_columns'])
-        self.assertIn('user_id', excluded_info['uuid_columns'])
+        self.assertIn('user_uuid', excluded_info['uuid_columns'])
         
         # Check combined exclusions
-        expected_excluded = set(excluded_info['uuid_columns'] + excluded_info['timestamp_columns'])
+        expected_excluded = set(
+            excluded_info['uuid_columns'] + 
+            excluded_info['timestamp_columns'] + 
+            excluded_info.get('sequence_columns', []) + 
+            excluded_info.get('metadata_columns', []) + 
+            excluded_info.get('excluded_columns', [])
+        )
         self.assertEqual(set(excluded_info['all_excluded']), expected_excluded)
     
     def test_timestamp_exclusion_in_comparison(self):

@@ -4,6 +4,7 @@ import json
 from datetime import datetime
 import csv
 import io
+import html
 
 from .models import ComparisonResult, TableDataComparison, RowDifference
 
@@ -254,7 +255,7 @@ class ReportGenerator:
     def _generate_html_report(self, result: ComparisonResult) -> str:
         """Generate HTML report with enhanced difference details"""
         
-        html = f"""
+        html_content = f"""
 <!DOCTYPE html>
 <html>
 <head>
@@ -310,20 +311,23 @@ class ReportGenerator:
         if result.schema_comparison:
             schema_differences = [table_diff for table_diff in result.schema_comparison.table_differences.values() if not table_diff.identical]
             if schema_differences:
-                html += "<h2>🏗️ Schema Differences</h2>"
+                html_content += "<h2>🏗️ Schema Differences</h2>"
                 for table_diff in schema_differences:
-                    html += f'<div class="table-section">'
-                    html += f"<h3>Table: {table_diff.table_name}</h3>"
+                    html_content += f'<div class="table-section">'
+                    html_content += f"<h3>Table: {table_diff.table_name}</h3>"
                     
                     if table_diff.column_differences:
-                        html += "<h4>Column Definition Differences</h4>"
-                        html += "<table>"
-                        html += "<tr><th>Column</th><th>Database 1</th><th>Database 2</th></tr>"
+                        html_content += "<h4>Column Definition Differences</h4>"
+                        html_content += "<table>"
+                        html_content += "<tr><th>Column</th><th>Database 1</th><th>Database 2</th></tr>"
                         for col_diff in table_diff.column_differences:
-                            html += f"<tr><td class='field-name'>{col_diff.field_name}</td><td>{col_diff.value_db1}</td><td>{col_diff.value_db2}</td></tr>"
-                        html += "</table>"
+                            escaped_field_name = html.escape(str(col_diff.field_name))
+                            escaped_value_db1 = html.escape(str(col_diff.value_db1))
+                            escaped_value_db2 = html.escape(str(col_diff.value_db2))
+                            html_content += f"<tr><td class='field-name'>{escaped_field_name}</td><td>{escaped_value_db1}</td><td>{escaped_value_db2}</td></tr>"
+                        html_content += "</table>"
                     
-                    html += "</div>"
+                    html_content += "</div>"
         
         # Add data differences
         if result.data_comparison:
@@ -331,18 +335,18 @@ class ReportGenerator:
                                 for table in result.data_comparison.table_results.values())
             
             if has_differences:
-                html += "<h2>📊 Data Differences</h2>"
+                html_content += "<h2>📊 Data Differences</h2>"
                 
                 for table_name, table_comp in result.data_comparison.table_results.items():
                     if (len(table_comp.rows_with_differences) > 0 or 
                         len(table_comp.rows_only_in_db1) > 0 or 
                         len(table_comp.rows_only_in_db2) > 0):
                         
-                        html += f'<div class="table-section">'
-                        html += f"<h3>Table: {table_comp.table_name}</h3>"
+                        html_content += f'<div class="table-section">'
+                        html_content += f"<h3>Table: {table_comp.table_name}</h3>"
                         
                         # Table metrics
-                        html += f"""
+                        html_content += f"""
                         <div class="metric">Row Count DB1: <span class="metric-value">{table_comp.row_count_db1}</span></div>
                         <div class="metric">Row Count DB2: <span class="metric-value">{table_comp.row_count_db2}</span></div>
                         <div class="metric">Matching Rows: <span class="metric-value">{table_comp.matching_rows}</span></div>
@@ -353,52 +357,59 @@ class ReportGenerator:
                         
                         # Show detailed row differences
                         if table_comp.rows_with_differences:
-                            html += "<h4>Row Differences</h4>"
+                            html_content += "<h4>Row Differences</h4>"
                             for i, row_diff in enumerate(table_comp.rows_with_differences, 1):
-                                html += f'<div class="difference">'
-                                html += f"<h5>Difference #{i} - Row: {row_diff.row_identifier}</h5>"
-                                html += "<table>"
-                                html += "<tr><th>Field</th><th>Database 1</th><th>Database 2</th></tr>"
+                                html_content += f'<div class="difference">'
+                                html_content += f"<h5>Difference #{i} - Row: {row_diff.row_identifier}</h5>"
+                                html_content += "<table>"
+                                html_content += "<tr><th>Field</th><th>Database 1</th><th>Database 2</th></tr>"
                                 
                                 for field_diff in row_diff.differences:
-                                    html += f"<tr><td class='field-name'>{field_diff.field_name}</td><td class='value-diff'>{field_diff.value_db1}</td><td class='value-diff'>{field_diff.value_db2}</td></tr>"
+                                    escaped_field_name = html.escape(str(field_diff.field_name))
+                                    escaped_value_db1 = html.escape(str(field_diff.value_db1))
+                                    escaped_value_db2 = html.escape(str(field_diff.value_db2))
+                                    html_content += f"<tr><td class='field-name'>{escaped_field_name}</td><td class='value-diff'>{escaped_value_db1}</td><td class='value-diff'>{escaped_value_db2}</td></tr>"
                                 
-                                html += "</table></div>"
+                                html_content += "</table></div>"
                         
                         # Show rows only in DB1
                         if table_comp.rows_only_in_db1:
-                            html += "<h4>Rows Only in Database 1</h4>"
+                            html_content += "<h4>Rows Only in Database 1</h4>"
                             for i, row in enumerate(table_comp.rows_only_in_db1, 1):
-                                html += f'<div class="difference">'
-                                html += f"<h5>Row #{i}</h5>"
-                                html += "<table>"
-                                html += "<tr><th>Field</th><th>Value</th></tr>"
+                                html_content += f'<div class="difference">'
+                                html_content += f"<h5>Row #{i}</h5>"
+                                html_content += "<table>"
+                                html_content += "<tr><th>Field</th><th>Value</th></tr>"
                                 
                                 for field, value in row.items():
-                                    html += f"<tr><td class='field-name'>{field}</td><td>{value}</td></tr>"
+                                    escaped_field = html.escape(str(field))
+                                    escaped_value = html.escape(str(value))
+                                    html_content += f"<tr><td class='field-name'>{escaped_field}</td><td>{escaped_value}</td></tr>"
                                 
-                                html += "</table></div>"
+                                html_content += "</table></div>"
                         
                         # Show rows only in DB2
                         if table_comp.rows_only_in_db2:
-                            html += "<h4>Rows Only in Database 2</h4>"
+                            html_content += "<h4>Rows Only in Database 2</h4>"
                             for i, row in enumerate(table_comp.rows_only_in_db2, 1):
-                                html += f'<div class="difference">'
-                                html += f"<h5>Row #{i}</h5>"
-                                html += "<table>"
-                                html += "<tr><th>Field</th><th>Value</th></tr>"
+                                html_content += f'<div class="difference">'
+                                html_content += f"<h5>Row #{i}</h5>"
+                                html_content += "<table>"
+                                html_content += "<tr><th>Field</th><th>Value</th></tr>"
                                 
                                 for field, value in row.items():
-                                    html += f"<tr><td class='field-name'>{field}</td><td>{value}</td></tr>"
+                                    escaped_field = html.escape(str(field))
+                                    escaped_value = html.escape(str(value))
+                                    html_content += f"<tr><td class='field-name'>{escaped_field}</td><td>{escaped_value}</td></tr>"
                                 
-                                html += "</table></div>"
+                                html_content += "</table></div>"
                         
-                        html += "</div>"
+                        html_content += "</div>"
             else:
-                html += '<div class="identical"><h2>✅ Result</h2><p>No data differences found between the databases!</p></div>'
+                html_content += '<div class="identical"><h2>✅ Result</h2><p>No data differences found between the databases!</p></div>'
         
-        html += "</body></html>"
-        return html
+        html_content += "</body></html>"
+        return html_content
     
     def _generate_csv_report(self, result: ComparisonResult) -> str:
         """Generate CSV report of differences"""

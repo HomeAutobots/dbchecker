@@ -46,11 +46,12 @@ class TestExceptionHandling(unittest.TestCase):
         conn.close()
     
     def test_database_connection_error_nonexistent_file(self):
-        """Test DatabaseConnectionError for nonexistent database file"""
-        nonexistent_path = os.path.join(self.temp_dir, "nonexistent.db")
+        """Test DatabaseConnectionError for invalid directory path"""
+        # SQLite creates files if they don't exist, so test with invalid directory
+        invalid_path = "/nonexistent/directory/that/cannot/be/created/test.db"
         
         with self.assertRaises(DatabaseConnectionError) as cm:
-            DatabaseConnector(nonexistent_path)
+            DatabaseConnector(invalid_path)
         
         self.assertIn("Failed to connect", str(cm.exception))
     
@@ -139,10 +140,12 @@ class TestExceptionHandling(unittest.TestCase):
     
     def test_invalid_configuration_error_invalid_options(self):
         """Test InvalidConfigurationError for invalid comparison options"""
-        invalid_db_path = os.path.join(self.temp_dir, "invalid.db")
         
         with self.assertRaises(Exception):  # Could be InvalidConfigurationError or others
-            comparator = DatabaseComparator("nonexistent1.db", "nonexistent2.db")
+            # Use truly invalid paths that can't be created
+            comparator = DatabaseComparator("/nonexistent/dir/db1.db", "/nonexistent/dir/db2.db")
+            # This should fail when trying to actually use the nonexistent databases
+            comparator.compare()
     
     def test_report_generator_unsupported_format(self):
         """Test ValueError for unsupported report format"""
@@ -168,11 +171,18 @@ class TestExceptionHandling(unittest.TestCase):
         """Test handling of corrupted database files"""
         # Create a file that's not a valid SQLite database
         corrupted_path = os.path.join(self.temp_dir, "corrupted.db")
-        with open(corrupted_path, 'w') as f:
-            f.write("This is not a SQLite database")
+        with open(corrupted_path, 'wb') as f:
+            f.write(b"This is not a SQLite database file - corrupted content")
         
-        with self.assertRaises(DatabaseConnectionError):
-            DatabaseConnector(corrupted_path)
+        # SQLite might connect but fail on operations
+        try:
+            conn = DatabaseConnector(corrupted_path)
+            # This should fail when trying to read from corrupted database
+            with self.assertRaises((DatabaseConnectionError, SchemaExtractionError)):
+                conn.get_table_names()
+        except DatabaseConnectionError:
+            # This is also acceptable - immediate connection failure
+            pass
     
     def test_empty_database_handling(self):
         """Test handling of empty database files"""
