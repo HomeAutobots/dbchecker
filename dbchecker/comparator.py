@@ -197,13 +197,25 @@ class DatabaseComparator:
         table_results = {}
         total_differences = 0
         
+        def compare_table_with_thread_local_connections(table_name: str):
+            """Compare a table using thread-local database connections to avoid SQLite threading issues"""
+            # Create new connections for this thread to avoid SQLite threading issues
+            thread_conn1 = DatabaseConnector(self.db1_path)
+            thread_conn2 = DatabaseConnector(self.db2_path)
+            
+            try:
+                return self.data_comparator.compare_table_data(
+                    table_name, thread_conn1, thread_conn2, self.options.batch_size
+                )
+            finally:
+                # Clean up thread-local connections
+                thread_conn1.close()
+                thread_conn2.close()
+        
         with ThreadPoolExecutor(max_workers=self.options.max_workers) as executor:
-            # Submit comparison tasks
+            # Submit comparison tasks - use thread-local connections to fix SQLite threading issue
             future_to_table = {
-                executor.submit(
-                    self.data_comparator.compare_table_data,
-                    table_name, self.conn1, self.conn2, self.options.batch_size
-                ): table_name
+                executor.submit(compare_table_with_thread_local_connections, table_name): table_name
                 for table_name in table_names
             }
             
